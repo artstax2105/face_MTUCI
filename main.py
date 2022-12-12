@@ -7,6 +7,7 @@ import psutil
 from pynvml.smi import nvidia_smi
 
 from detection.detector import FaceDetector
+from alignment.alignment import FaceNormalizer
 
 from utils import create_facebank, add_person, load_facebank_pth, draw_bbox
 
@@ -19,8 +20,9 @@ if __name__ == '__main__':
     ram_start = psutil.virtual_memory()[4]
 
     detector = FaceDetector()
+    normalizer = FaceNormalizer()
+   
 
-    embeddings, names = load_facebank_pth('test')
 
     cap = cv2.VideoCapture("videos/test_afl_2.mp4")
     num_frames = 0
@@ -40,13 +42,15 @@ if __name__ == '__main__':
         detections = detector.detect(frame)
 
         faces = []
+        for person_detections in detections:
+            face = normalizer.normalize(image=frame, detections=person_detections)
+            faces.append(face)
 
-
+        
         if num_frames == 20:
             nvsmi = nvidia_smi.getInstance()
             gpu_loop = nvsmi.DeviceQuery('memory.free, memory.total')
             ram_loop = psutil.virtual_memory()[4]
-
 
         #cv2.imshow('recognition_test', frame)
         # gif_list.append(cv2.cvtColor(frame, cv2.COLOR_BGR2RGB))
